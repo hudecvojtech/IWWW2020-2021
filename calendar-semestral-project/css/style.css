@@ -1,0 +1,296 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Roboto', sans-serif;
+}
+
+header {
+    background-color: #011936;
+    clear:both;
+    overflow:auto;
+}
+
+header nav {
+    margin-top: 5px;
+    padding: 0px 20px;
+    float:right;
+}
+
+header .logo {
+    padding: 0px 20px;
+    float:left;
+}
+
+header .logo h1 a {
+    color: #F8C537;
+    font-weight: lighter;
+    text-decoration: none;
+}
+
+header ul li {
+    background-color: #F8C537;
+    border-radius: 5px;
+    display: inline-block;
+    padding: 10px;
+    margin: 0px 5px;
+}
+
+header ul li:hover {
+    background-color: #EDB230;
+}
+
+header ul li a {
+    font-weight: bold;
+    text-decoration: none;
+    color: #FFFFFF;
+}
+
+.full-screen {
+    height: calc(100% - 136px);
+    position: relative;
+}
+
+.content h2 {
+    margin-top: 0px;
+    font-size: 40px;
+    font-weight: bold;
+    color: #FFFFFF;
+}
+
+.content p {
+    font-size: 26px;
+    color: #FFFFFF;
+}
+
+.content-index-bg {
+    background: url(../img/calendar-bg.jpg) no-repeat center center fixed;
+    background-size: cover;
+    box-shadow: inset 0 0 0 10000px rgba(0,0,0,.45);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.content {
+    padding-bottom: 60px;
+    width: 100%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+button {
+    background-color: #F8C537;
+    border: none;
+    border-radius: 5px;
+    padding: 15px 32px;
+    text-align: center;
+    display: inline-block;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.content button a {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.content button:hover {
+    background-color: #EDB230;
+}
+
+footer {
+    padding-top: 5px;
+    width: 100%;
+    height: 50px;
+    text-align: center;
+    background-color: #011936;
+    color: #F8C537;
+    font-weight: 100;
+}
+
+/* login.php */
+.error {
+    margin-top: 20px;
+    background-color: #b10000;
+    border-radius: 5px;
+    width: 30%;
+    margin: 0 auto;
+}
+
+.error p {
+    padding: 30px;
+    color: white;
+    font-weight: bold;
+}
+
+.container form {
+    padding-top: 20px;
+    text-align: center;
+    width: 30%;
+    margin: 0 auto;
+}
+
+input[type=text], input[type=email], input[type=password], input[type=date] {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+input[type=submit] {
+    width: 100%;
+    background-color: #F8C537;
+    color: #FFFFFF;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+input[type=submit]:hover {
+    background-color: #EDB230;
+}
+
+label {
+    display: block;
+}
+
+.container {
+    min-height: calc(100% - 136px);
+}
+
+.container p {
+    text-align: center;
+}
+
+.container a {
+    color: #F8C537;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* dashboard.php */
+.side {
+    width: 20%;
+    float: left;
+}
+
+.side p {
+    display: block;
+    text-align: center;
+    margin-top: 0;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+.avatarimg {
+    padding: 20px;
+    width: 80px;
+    height: 80px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.calendar-list ul {
+    padding-top: 20px;
+    padding-left: 20px;
+    list-style-type: none;
+}
+
+.calendar-list ul li {
+    padding-bottom: 10px;
+    padding-right: 20px;
+}
+
+.calendar-list button {
+    margin: 0 auto;
+    display: block;
+    background-color: #F8C537;
+    border: none;
+    border-radius: 5px;
+    padding: 15px 28px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.calendar-list button:hover, .calendar-view button:hover {
+    background-color: #EDB230;
+}
+
+.calendar-view {
+    height: 100%;
+    overflow: auto;
+}
+
+.calendar-view button {
+    margin: 0 auto;
+    background-color: #F8C537;
+    border: none;
+    border-radius: 5px;
+    padding: 15px 28px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.calendar-view .controls {
+    padding-top: 20px;
+    padding-left: 2.5%;
+    padding-right: 2.5%;
+    height: 60px;
+}
+
+.calendar-view .controls .left {
+    float: left;
+}
+
+.calendar-view .controls .right {
+    float: right;
+}
+
+.calendar-view table {
+    margin: 20px auto 40px;
+    width: 95%;
+    white-space:nowrap;
+    border-collapse: collapse;
+}
+
+.calendar-view tr:nth-child(even) {
+    background-color: #dddddd;
+}
+
+.calendar-view th {
+    border-bottom: 1px #000000 solid;
+}
+
+#addCalendar, #addEvent {
+    position: absolute;
+    top: 25%;
+    left: calc(50% - 25%/2);
+    width: 25%;
+    background-color: #FFFFFF;
+    border-radius: 5px;
+    border: 3px #011936 solid;
+    display: none;
+}
+
+#addCalendar form, #addEvent form {
+    padding: 50px;
+}
+
+/* settings.php */
+.settingsavatar {
+    width: 200px;
+}
+
+.settingsform {
+    padding-bottom: 50px;
+}
