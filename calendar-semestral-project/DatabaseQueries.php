@@ -58,4 +58,36 @@ VALUES ('$email', '$password', '$firstname', '$lastname', $roleId, $avatarId)";
         return "DELETE FROM users_calendars WHERE CALENDAR_id_calendar = '$calendarId'; DELETE FROM eventtable WHERE CALENDAR_id_calendar = '$calendarId';
  DELETE FROM calendar WHERE id_calendar = '$calendarId'";
     }
+
+    public static function updateAvatar($avatarId, $userId) {
+        return "UPDATE users SET AVATAR_id_avatar = '$avatarId' WHERE id_user = '$userId'";
+    }
+
+    public static function updateFirstName($firstname, $userId) {
+        return "UPDATE users SET firstname = '$firstname' WHERE id_user = '$userId'";
+    }
+
+    public static function updateLastName($lastname, $userId) {
+        return "UPDATE users SET lastname = '$lastname' WHERE id_user = '$userId'";
+    }
+
+    public static function updateEmail($email, $userId) {
+        return "UPDATE users SET email = '$email' WHERE id_user = '$userId'";
+    }
+
+    public static function updatePassword($password, $userId) {
+        return "UPDATE users SET password = '$password' WHERE id_user = '$userId'";
+    }
+
+    public static function insertAvatar($path) {
+        return "INSERT INTO avatar(path) VALUES ('$path')";
+    }
+
+    public static function selectAvatarIdByPath($path) {
+        return "SELECT id_avatar FROM avatar WHERE path = '$path'";
+    }
+
+    public static function deleteAvatar($id) {
+        return "DELETE FROM avatar WHERE id_avatar = '$id'";
+    }
 }

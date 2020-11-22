@@ -153,6 +153,12 @@ input[type=submit] {
     cursor: pointer;
 }
 
+input[type=file] {
+    padding: 10px 0;
+    display: block;
+    margin: 0 auto;
+}
+
 input[type=submit]:hover {
     background-color: #EDB230;
 }
@@ -248,12 +254,21 @@ label {
     height: 60px;
 }
 
+.calendar-view .controls button a {
+    color: #000000;
+}
+
 .calendar-view .controls .left {
     float: left;
 }
 
 .calendar-view .controls .right {
     float: right;
+}
+
+.calendar-view .controls form {
+    float: left;
+    padding-right: 5px;
 }
 
 .calendar-view table {
@@ -271,6 +286,19 @@ label {
     border-bottom: 1px #000000 solid;
 }
 
+.calendar-view td {
+    text-align: center;
+}
+
+.events {
+    clear: both;
+}
+
+.events h2 {
+    width: 95%;
+    margin: 0 auto;
+}
+
 #addCalendar, #addEvent {
     position: absolute;
     top: 25%;
@@ -284,6 +312,19 @@ label {
 
 #addCalendar form, #addEvent form {
     padding: 50px;
+}
+
+#errorAbsolute {
+    position: absolute;
+    top: 25%;
+    left: calc(50% - 25%/2);
+    width: 25%;
+    height: 25%;
+    background-color: #b10000;
+    border-radius: 5px;
+    text-align: center;
+    padding: 50px;
+    font-weight: bold;
 }
 
 /* settings.php */

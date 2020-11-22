@@ -56,72 +56,51 @@ class user
         }
     }
 
-    public static function echoCalendars($id, $pdo) {
-        $query = DatabaseQueries::calendarIdByUserId($id);
-        $stmt = $pdo->query($query);
-        while($row = $stmt->fetch()) {
-            $query = DatabaseQueries::calendarNameById($row[0]);
-            $stmtCal = $pdo->query($query);
-            while($cal = $stmtCal->fetch()) {
-                echo '<li><a href="dashboard.php?id=' . $row[0] . '">' . $cal[0] . '</a></li>';
-            }
-        }
+    public static function updateFirstName($firstname, $userId, $pdo) {
+        $query = DatabaseQueries::updateFirstName($firstname, $userId);
+        $pdo->query($query);
+        $_SESSION["firstname"] = $firstname;
     }
 
-    public static function calendarIdByName($name, $pdo) {
-        $query = DatabaseQueries::calendarIdByName($name);
-        $stmt = $pdo->query($query);
-        $count = $stmt->rowCount();
-        if($count == 0) return 0;
-
-        $stmt = $stmt->fetch();
-        return $stmt[0];
+    public static function updateLastName($lastname, $userId, $pdo) {
+        $query = DatabaseQueries::updateLastName($lastname, $userId);
+        $pdo->query($query);
+        $_SESSION["lastname"] = $lastname;
     }
 
-    public static function calendarNameById($id, $pdo) {
-        $query = DatabaseQueries::calendarNameById($id);
-        $stmt = $pdo->query($query);
-        $stmt = $stmt->fetch();
-        return $stmt[0];
+    public static function updateEmail($email, $userId, $pdo) {
+        $query = DatabaseQueries::updateEmail($email, $userId);
+        $pdo->query($query);
+        $_SESSION["email"] = $email;
     }
 
-    public static function insertUserIdCalendarId($userId, $calendarId, $pdo) {
-        $query = DatabaseQueries::insertUserIdCalendarId($userId, $calendarId);
+    public static function updatePassword($password, $userId, $pdo) {
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+        $query = DatabaseQueries::updatePassword($passwordHash, $userId);
         $pdo->query($query);
     }
 
-    public static function calendarInsert($name, $validUntil, $pdo) {
-        $query = DatabaseQueries::insertCalendar($name, $validUntil);
-        $statement = $pdo->prepare($query);
-        if(!$statement->execute()) {
-            echo $statement->errorInfo();
-        } else {
-            self::insertUserIdCalendarId($_SESSION["id"], self::calendarIdByName($name, $pdo), $pdo);
-        }
-    }
-
-    public static function eventInsert($name, $start, $end, $calendarId, $pdo) {
-        $query = DatabaseQueries::insertEvent($name, $start, $end, $calendarId);
+    public static function insertAvatar($path, $pdo) {
+        $query = DatabaseQueries::insertAvatar($path);
         $pdo->query($query);
     }
 
-    public static function selectEvents($calendarId, $pdo) {
-        $query = DatabaseQueries::selectEvents($calendarId);
-        $stmt = $pdo->query($query);
-        while($row = $stmt->fetch()) {
-            echo $row["name"] . ": " . $row["start"] . " - " . $row["end"] . ' - <a href="dashboard.php?deleteEvent=' . $row["id_event"] . '&id=' . $_SESSION["calendarId"] . '">delete</a>';
-        }
+    public static function selectAvatarByPath($path, $pdo) {
+        $query = DatabaseQueries::selectAvatarIdByPath($path);
+        $result = $pdo->query($query);
+        $result = $result->fetch();
+        return $result[0];
+
     }
 
-    public static function deleteEvent($eventId, $pdo)
-    {
-        $query = DatabaseQueries::deleteEvent($eventId);
+    public static function updateAvatar($avatarId, $userId, $pdo) {
+        $query = DatabaseQueries::updateAvatar($avatarId, $userId);
         $pdo->query($query);
     }
 
-    public static function deleteCalendar($calendarId, $pdo)
-    {
-        $query = DatabaseQueries::deleteCalendar($calendarId);
+    public static function deleteAvatar($avatarId, $pdo) {
+        $query = DatabaseQueries::deleteAvatar($avatarId);
         $pdo->query($query);
     }
+
 }

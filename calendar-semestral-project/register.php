@@ -37,10 +37,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $err .= "Please enter your password again.<br>";
     } else {
         $password2 = trim($_POST["password2"]);
-    }
-
-    if($password1 != $password2) {
-        $err .= "Your passwords does not match.<br>";
+        if($password1 != $password2) {
+            $err .= "Your passwords does not match.<br>";
+        }
     }
 
     if(empty($err)) {

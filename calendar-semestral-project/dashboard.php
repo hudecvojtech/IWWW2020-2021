@@ -6,6 +6,7 @@
 session_start();
 require "connection.php";
 require "User.php";
+require "Calendar.php";
 
 if(isset($_GET["id"])) {
     $_SESSION["calendarId"] = $_GET["id"];
@@ -15,26 +16,63 @@ if(isset($_GET["id"])) {
 
 if(isset($_GET["deleteEvent"])) {
     $eventId = $_GET["deleteEvent"];
-    User::deleteEvent($eventId, $pdo);
+    Calendar::deleteEvent($eventId, $pdo);
 }
 
 if(isset($_GET["deleteCalendar"])) {
-    $calendarId = $_GET["deleteCalendar"];
-    User::deleteCalendar($calendarId, $pdo);
+    if($_GET["deleteCalendar"] != 0) {
+        $calendarId = $_GET["deleteCalendar"];
+        Calendar::deleteCalendar($calendarId, $pdo);
+    }
+}
+
+if(isset($_POST["exportJson"])) {
+    if($_GET["id"] != 0) {
+        $path = "export-calendar-" . $_SESSION["calendarId"] . ".json";
+        $fp = fopen($path, 'w');
+        $events = Calendar::selectEvents($_SESSION["calendarId"], $pdo);
+        $json = json_encode($events);
+        $json = preg_replace('/,\s*"[^"]+":null|"[^"]+":null,?/', '', $json);
+        fwrite($fp, $json);
+        fclose($fp);
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . $path . '"');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: 10');
+        readfile($path);
+        unlink($path);
+        exit;
+    }
+}
+
+if(isset($_POST["importJson"])) {
+    if($_GET["id"] != 0) {
+        $target_file = basename($_FILES["fileToUpload"]["name"]);
+        move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file);
+        $strJsonFileContents = file_get_contents($target_file);
+        $array = json_decode($strJsonFileContents, true);
+        foreach($array as $item) {
+            Calendar::eventInsert($item["name"], $item["start"], $item["end"], $_SESSION["calendarId"], $pdo);
+        }
+        unlink($target_file);
+    }
 }
 
 if(isset($_POST["addCalendarButton"])) {
     $err = NULL;
 
     if(empty($_POST["calendarname"])) {
-        $err .= "Name is not set.";
+        $err .= "Name is not set.<br>";
     } else {
         $name = $_POST["calendarname"];
     }
 
     if(!empty($_POST["expiration"])) {
         if (empty($_POST["validUntil"])) {
-            $err .= "Valid until is not set.";
+            $err .= "Valid until is not set.<br>";
         } else {
             $validUntil = $_POST["validUntil"];
         }
@@ -43,39 +81,38 @@ if(isset($_POST["addCalendarButton"])) {
     }
 
     if(empty($err)) {
-        User::calendarInsert($name, $validUntil, $pdo);
+        Calendar::calendarInsert($name, $validUntil, $pdo);
     }
-
-    echo $err;
-
 }
 
 if(isset($_POST["addEventButton"])) {
     $err = NULL;
+    if($_GET["id"] == 0) {
+        $err .= "Calendar is not selected.<br>";
+    }
 
     if(empty($_POST["name"])) {
-        $err .= "Name is not set.";
+        $err .= "Name is not set.<br>";
     } else {
         $name = $_POST["name"];
     }
 
     if(empty($_POST["start"])) {
-        $err .= "Start is not set.";
+        $err .= "Start is not set.<br>";
     } else {
         $start = $_POST["start"];
     }
 
     if(empty($_POST["end"])) {
-        $err .= "End is not set.";
+        $err .= "End is not set.<br>";
     } else {
         $end = $_POST["end"];
     }
 
     if(empty($err)) {
-        User::eventInsert($name, $start, $end, $_SESSION["calendarId"], $pdo);
+        Calendar::eventInsert($name, $start, $end, $_SESSION["calendarId"], $pdo);
     }
 
-    echo $err;
 }
 
 ?>
@@ -109,14 +146,19 @@ if(isset($_POST["addEventButton"])) {
 <div class="container">
     <div class="side">
         <div class="user">
-            <img class="avatarimg" src="img/<?php echo $_SESSION["avatar"] ?>">
+            <img class="avatarimg" alt="avatar" src="img/<?php echo $_SESSION["avatar"] ?>">
             <p><?php echo $_SESSION["firstname"] . " " . $_SESSION["lastname"] ?></p>
         </div>
         <div class="calendar-list">
             <button type="button" onclick="addCalendar()">Add new calendar</button>
             <ul>
                 <?php
-                User::echoCalendars($_SESSION["id"], $pdo);
+                $arr = Calendar::getCalendars($_SESSION["id"], $pdo);
+                if(!empty($arr[0]["id"])) {
+                    foreach($arr as $item) {
+                        echo '<li><a href="dashboard.php?id=' . $item["id"] . '">' . $item["name"] . '</a></li>';
+                    }
+                }
                 ?>
             </ul>
         </div>
@@ -124,8 +166,13 @@ if(isset($_POST["addEventButton"])) {
     <div class="calendar-view">
         <div class="controls">
             <div class="left">
-                <button>Previous week</button>
-                <button>Next week</button>
+                <form action="dashboard.php?id=<?php echo $_SESSION["calendarId"]; ?>" method="post">
+                    <input type="submit" value="Export" name="exportJson">
+                </form>
+                <form action="dashboard.php?id=<?php echo $_SESSION["calendarId"]; ?>" method="post" enctype="multipart/form-data">
+                    <input type="submit" value="Import" name="importJson">
+                    <input type="file" name="fileToUpload" id="fileToUpload">
+                </form>
             </div>
             <div class="right">
                 <button type="button"><a href="dashboard.php?deleteCalendar=<?php echo $_SESSION["calendarId"]; ?>">Delete calendar</a></button>
@@ -135,8 +182,24 @@ if(isset($_POST["addEventButton"])) {
         <div class="events">
             <?php
             if($_SESSION["calendarId"] != 0) {
-                echo "<h2>" . User::calendarNameById($_SESSION["calendarId"], $pdo) . "</h2>";
-                User::selectEvents($_SESSION["calendarId"], $pdo);
+                echo "<h2>" . Calendar::calendarNameById($_SESSION["calendarId"], $pdo) . "</h2>";
+                echo "<table>";
+                echo "<tr>";
+                echo "<th>Event</th>";
+                echo "<th>Start</th>";
+                echo "<th>End</th>";
+                echo "<th>Action</th>";
+                echo "</tr>";
+
+                $arr = Calendar::selectEvents($_SESSION["calendarId"], $pdo);
+                if(!empty($arr[0]["name"])) {
+                    foreach($arr as $item) {
+                        echo "<tr>";
+                        echo "<td>" . $item["name"] . "</td><td>" . $item["start"] . "</td><td>" . $item["end"] . '</td><td><a href="dashboard.php?deleteEvent=' . $item["id"] . '&id=' . $_SESSION["calendarId"] . '">delete</a></td>';
+                        echo "</tr>";
+                    }
+                }
+                echo "</table>";
             }
             ?>
         </div>
@@ -159,7 +222,7 @@ if(isset($_POST["addEventButton"])) {
 </div>
 
 <div id="addEvent">
-    <form action="dashboard.php? <?php echo 'id=' . $_SESSION["calendarId"] . '"' ?> method="post">
+    <form action="dashboard.php?<?php echo 'id=' . $_SESSION["calendarId"] . '" ' ?> method="post">
         <label for="name">Name:</label>
         <input type="text" name="name">
         <label for="start">Start:</label>
@@ -169,6 +232,15 @@ if(isset($_POST["addEventButton"])) {
         <input type="submit" value="Add event" name="addEventButton">
     </form>
 </div>
+
+<?php
+if(!empty($err)) {
+    echo '<div id="errorAbsolute">
+        <p>' . $err . '</p>
+    </div>';
+}
+?>
+
 
 <script>
     document.addEventListener('mouseup', function (e) {
@@ -180,6 +252,11 @@ if(isset($_POST["addEventButton"])) {
         var addEvent = document.getElementById('addEvent');
         if (!addEvent.contains(e.target)) {
             addEvent.style.display = 'none';
+        }
+
+        var errorAbsolute = document.getElementById('errorAbsolute');
+        if (!errorAbsolute.contains(e.target)) {
+            errorAbsolute.style.display = 'none';
         }
     });
 
