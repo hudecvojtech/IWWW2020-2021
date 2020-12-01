@@ -7,6 +7,8 @@ session_start();
 require_once "connection.php";
 require_once "User.php";
 
+$user = new User($pdo);
+
 if($_SERVER["REQUEST_METHOD"] == "POST") {
     $err = NULL;
     if(empty(trim($_POST["email"]))) {
@@ -22,7 +24,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if(empty($err)) {
-        if(!User::login($email, $password, $pdo)) {
+        if(!$user->login($email, $password)) {
             $err .= "Email or password is not valid.<br>";
         }
     }

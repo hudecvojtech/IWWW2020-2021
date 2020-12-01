@@ -8,6 +8,8 @@ require "connection.php";
 require "User.php";
 require "Calendar.php";
 
+$calendar = new Calendar($pdo);
+
 if(isset($_GET["id"])) {
     $_SESSION["calendarId"] = $_GET["id"];
 } else {
@@ -16,13 +18,13 @@ if(isset($_GET["id"])) {
 
 if(isset($_GET["deleteEvent"])) {
     $eventId = $_GET["deleteEvent"];
-    Calendar::deleteEvent($eventId, $pdo);
+    $calendar->deleteEvent($eventId);
 }
 
 if(isset($_GET["deleteCalendar"])) {
     if($_GET["deleteCalendar"] != 0) {
         $calendarId = $_GET["deleteCalendar"];
-        Calendar::deleteCalendar($calendarId, $pdo);
+        $calendar->deleteCalendar($calendarId);
     }
 }
 
@@ -30,7 +32,7 @@ if(isset($_POST["exportJson"])) {
     if($_GET["id"] != 0) {
         $path = "export-calendar-" . $_SESSION["calendarId"] . ".json";
         $fp = fopen($path, 'w');
-        $events = Calendar::selectEvents($_SESSION["calendarId"], $pdo);
+        $events = $calendar->selectEvents($_SESSION["calendarId"]);
         $json = json_encode($events);
         $json = preg_replace('/,\s*"[^"]+":null|"[^"]+":null,?/', '', $json);
         fwrite($fp, $json);
@@ -55,7 +57,7 @@ if(isset($_POST["importJson"])) {
         $strJsonFileContents = file_get_contents($target_file);
         $array = json_decode($strJsonFileContents, true);
         foreach($array as $item) {
-            Calendar::eventInsert($item["name"], $item["start"], $item["end"], $_SESSION["calendarId"], $pdo);
+            $calendar->eventInsert($item["name"], $item["start"], $item["end"], $_SESSION["calendarId"], 1);
         }
         unlink($target_file);
     }
@@ -81,7 +83,7 @@ if(isset($_POST["addCalendarButton"])) {
     }
 
     if(empty($err)) {
-        Calendar::calendarInsert($name, $validUntil, $pdo);
+        $calendar->calendarInsert($name, $validUntil);
     }
 }
 
@@ -110,7 +112,7 @@ if(isset($_POST["addEventButton"])) {
     }
 
     if(empty($err)) {
-        Calendar::eventInsert($name, $start, $end, $_SESSION["calendarId"], $pdo);
+        $calendar->eventInsert($name, $start, $end, $_SESSION["calendarId"], 1);
     }
 
 }
@@ -153,7 +155,7 @@ if(isset($_POST["addEventButton"])) {
             <button type="button" onclick="addCalendar()">Add new calendar</button>
             <ul>
                 <?php
-                $arr = Calendar::getCalendars($_SESSION["id"], $pdo);
+                $arr = $calendar->getCalendars($_SESSION["id"]);
                 if(!empty($arr[0]["id"])) {
                     foreach($arr as $item) {
                         echo '<li><a href="dashboard.php?id=' . $item["id"] . '">' . $item["name"] . '</a></li>';
@@ -182,7 +184,7 @@ if(isset($_POST["addEventButton"])) {
         <div class="events">
             <?php
             if($_SESSION["calendarId"] != 0) {
-                echo "<h2>" . Calendar::calendarNameById($_SESSION["calendarId"], $pdo) . "</h2>";
+                echo "<h2>" . $calendar->calendarNameById($_SESSION["calendarId"]) . "</h2>";
                 echo "<table>";
                 echo "<tr>";
                 echo "<th>Event</th>";
@@ -191,11 +193,13 @@ if(isset($_POST["addEventButton"])) {
                 echo "<th>Action</th>";
                 echo "</tr>";
 
-                $arr = Calendar::selectEvents($_SESSION["calendarId"], $pdo);
+                $arr = $calendar->selectEvents($_SESSION["calendarId"]);
                 if(!empty($arr[0]["name"])) {
                     foreach($arr as $item) {
                         echo "<tr>";
-                        echo "<td>" . $item["name"] . "</td><td>" . $item["start"] . "</td><td>" . $item["end"] . '</td><td><a href="dashboard.php?deleteEvent=' . $item["id"] . '&id=' . $_SESSION["calendarId"] . '">delete</a></td>';
+                        echo "<td>" . $item["name"] . "</td><td>" . $item["start"] . "</td><td>" . $item["end"] .
+                            '</td><td><a href="dashboard.php?deleteEvent=' . $item["id"] . '&id=' .
+                            $_SESSION["calendarId"] . '">delete</a></td>';
                         echo "</tr>";
                     }
                 }

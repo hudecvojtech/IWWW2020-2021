@@ -1,18 +1,22 @@
 <?php
 
-require_once "DatabaseQueries.php";
-
 class Calendar
 {
-    public static function getCalendars($userId, $pdo) {
+    private $conn;
+
+    public function __construct(\PDO $pdo) {
+        $this->conn = $pdo;
+    }
+
+    public function getCalendars($userId) {
         $arr[][] = NULL;
         $i = 0;
-        $query = DatabaseQueries::calendarIdByUserId($userId);
-        $stmt = $pdo->query($query);
+        $query = "SELECT CALENDAR_id_calendar FROM users_calendars WHERE USER_id_user = '$userId'";
+        $stmt = $this->conn->query($query);
         while($row = $stmt->fetch()) {
             $arr[$i]["id"] = $row[0];
-            $query = DatabaseQueries::calendarNameById($row[0]);
-            $stmtCal = $pdo->query($query);
+            $query = "SELECT name FROM calendar WHERE id_calendar = '$row[0]'";
+            $stmtCal = $this->conn->query($query);
             while($cal = $stmtCal->fetch()) {
                 $arr[$i]["name"] = $cal[0];
             }
@@ -21,9 +25,9 @@ class Calendar
         return $arr;
     }
 
-    public static function calendarIdByName($name, $pdo) {
-        $query = DatabaseQueries::calendarIdByName($name);
-        $stmt = $pdo->query($query);
+    public function calendarIdByName($name) {
+        $query = "SELECT id_calendar FROM calendar WHERE name = '$name'";
+        $stmt = $this->conn->query($query);
         $count = $stmt->rowCount();
         if($count == 0) return 0;
 
@@ -31,59 +35,62 @@ class Calendar
         return $stmt[0];
     }
 
-    public static function calendarNameById($id, $pdo) {
-        $query = DatabaseQueries::calendarNameById($id);
-        $stmt = $pdo->query($query);
+    public function calendarNameById($id) {
+        $query = "SELECT name FROM calendar WHERE id_calendar = '$id'";
+        $stmt = $this->conn->query($query);
         $stmt = $stmt->fetch();
         return $stmt[0];
     }
 
-    public static function insertUserIdCalendarId($userId, $calendarId, $pdo) {
-        $query = DatabaseQueries::insertUserIdCalendarId($userId, $calendarId);
-        $pdo->query($query);
+    public function insertUserIdCalendarId($userId, $calendarId) {
+        $query = "INSERT INTO users_calendars(USER_id_user, CALENDAR_id_calendar) VALUES($userId, $calendarId)";
+        $this->conn->query($query);
     }
 
-    public static function calendarInsert($name, $validUntil, $pdo) {
-        $query = DatabaseQueries::insertCalendar($name, $validUntil);
-        $statement = $pdo->prepare($query);
+    public function calendarInsert($name, $validUntil) {
+        $query = "INSERT INTO calendar(name, valid_until) VALUES('$name', '$validUntil')";
+        $statement = $this->conn->prepare($query);
         if(!$statement->execute()) {
             echo $statement->errorInfo();
         } else {
-            self::insertUserIdCalendarId($_SESSION["id"], self::calendarIdByName($name, $pdo), $pdo);
+            $this->insertUserIdCalendarId($_SESSION["id"], $this->calendarIdByName($name));
         }
     }
 
-    public static function eventInsert($name, $start, $end, $calendarId, $pdo) {
-        $query = DatabaseQueries::insertEvent($name, $start, $end, $calendarId);
-        $pdo->query($query);
+    public function eventInsert($name, $start, $end, $calendarId, $categoryId) {
+        $query = "INSERT INTO event_calendar(name, start, end, CALENDAR_id_calendar, CATEGORY_id_category) 
+VALUES('$name', '$start', '$end', '$calendarId', '$categoryId')";
+        $this->conn->query($query);
     }
 
-    public static function selectEvents($calendarId, $pdo) {
+    public function selectEvents($calendarId) {
         $arr[][] = NULL;
         $i = 0;
-        $query = DatabaseQueries::selectEvents($calendarId);
-        $stmt = $pdo->query($query);
+        $query = "SELECT * FROM event_calendar WHERE CALENDAR_id_calendar = '$calendarId'";
+        $stmt = $this->conn->query($query);
 
         while($row = $stmt->fetch()) {
             $arr[$i]["name"] = $row["name"];
             $arr[$i]["start"] = $row["start"];
             $arr[$i]["end"] = $row["end"];
-            $arr[$i]["id"] = $row["id_event"];
+            $arr[$i]["id"] = $row["id_event_calendar"];
             $i++;
         }
 
         return $arr;
     }
 
-    public static function deleteEvent($eventId, $pdo)
+    public function deleteEvent($eventId)
     {
-        $query = DatabaseQueries::deleteEvent($eventId);
-        $pdo->query($query);
+        $query = "DELETE FROM event_calendar WHERE id_event = '$eventId'";
+        $this->conn->query($query);
     }
 
-    public static function deleteCalendar($calendarId, $pdo)
+    public function deleteCalendar($calendarId)
     {
-        $query = DatabaseQueries::deleteCalendar($calendarId);
-        $pdo->query($query);
+        $query = "DELETE FROM users_calendars WHERE CALENDAR_id_calendar = '$calendarId'; 
+DELETE FROM event_calendar WHERE CALENDAR_id_calendar = '$calendarId';
+ DELETE FROM calendar WHERE id_calendar = '$calendarId'";
+        $this->conn->query($query);
     }
 }

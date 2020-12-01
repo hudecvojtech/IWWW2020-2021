@@ -1,17 +1,19 @@
 <?php
 
-require_once "DatabaseQueries.php";
-
-class user
+class User
 {
+    private $conn;
 
-    public static function login($email, $password, $pdo)
+    public function __construct(\PDO $pdo) {
+        $this->conn = $pdo;
+    }
+
+    public function login($email, $password)
     {
-        $query = DatabaseQueries::userFindByEmail($email);
-        $stmt = $pdo->prepare($query);
-        $stmt->execute();
+        $query = "SELECT * FROM users WHERE email = '$email'";
+        $stmt = $this->conn->query($query);
         $count = $stmt->rowCount();
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $row = $stmt->fetch();
         if ($count == 1) {
             if (!password_verify($password, $row["password"]))
                 return false;
@@ -20,17 +22,11 @@ class user
             $_SESSION["email"] = $row["email"];
             $_SESSION["firstname"] = $row["firstname"];
             $_SESSION["lastname"] = $row["lastname"];
+            $_SESSION["role"] = $row["role"];
 
-            $roleId = $row["ROLE_id_role"];
             $avatarId = $row["AVATAR_id_avatar"];
-
-            $query = DatabaseQueries::roleNameById($roleId);
-            $result = $pdo->query($query);
-            $result =  $result->fetch();
-            $_SESSION["role"] = $result[0];
-
-            $query = DatabaseQueries::avatarPathById($avatarId);
-            $result = $pdo->query($query);
+            $query = "SELECT path FROM avatar WHERE id_avatar = '$avatarId'";
+            $result = $this->conn->query($query);
             $result =  $result->fetch();
             $_SESSION["avatar"] = $result[0];
 
@@ -40,67 +36,64 @@ class user
         }
     }
 
-    public static function register($email, $password, $firstname, $lastname, $roleId, $avatarId, $pdo)
+    public function register($email, $password, $firstname, $lastname, $role, $avatarId)
     {
-        $query = DatabaseQueries::userFindByEmail($email);
-        $stmt = $pdo->prepare($query);
-        $stmt->execute();
+        $query = "SELECT * FROM users WHERE email = '$email'";
+        $stmt = $this->conn->query($query);
         $count = $stmt->rowCount();
         if ($count == 0) {
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $query = DatabaseQueries::userInsert($email, $passwordHash, $firstname, $lastname, $roleId, $avatarId);
-            $pdo->query($query);
-            User::login($email, $password, $pdo);
+            $query = "INSERT INTO `users` (`email`, `password`, `firstname`, `lastname`, `role`, `AVATAR_id_avatar`)
+ VALUES ('$email', '$passwordHash', '$firstname', '$lastname', '$role', '$avatarId')";
+            var_dump($query);
+            $this->conn->query($query);
+            $this->login($email, $password);
         } else {
             return false;
         }
     }
 
-    public static function updateFirstName($firstname, $userId, $pdo) {
-        $query = DatabaseQueries::updateFirstName($firstname, $userId);
-        $pdo->query($query);
-        $_SESSION["firstname"] = $firstname;
-    }
+    public function update($userId, $firstname, $lastname, $email, $password, $role, $avatarId) {
+        $count = 0;
+        $query = "UPDATE users ";
+        if($firstname != $_SESSION["firstname"] && !empty($firstname)) {
+            $_SESSION["firstname"] = $firstname;
+            $query .= "SET firstname='$firstname'";
+            $count++;
+        }
+        if($lastname != $_SESSION["lastname"] && !empty($lastname)) {
+            $_SESSION["lastname"] = $lastname;
+            $query .= "SET lastname='$lastname'";
+            $count++;
+        }
+        if($email != $_SESSION["email"] && !empty($email)) {
+            $_SESSION["email"] = $email;
+            $query .= "SET email='$email'";
+            $count++;
+        }
+        if(!empty($password)) {
+            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+            $query .= "SET password='$passwordHash'";
+            $count++;
+        }
+        if($role != $_SESSION["role"] && !empty($role)) {
+            $_SESSION["role"] = $role;
+            $query .= "SET role='$role'";
+            $count++;
+        }
+        if($avatarId != $_SESSION["avatar"] && !empty($avatarId)) {
+            $avat = new Avatar($this->conn);
+            $_SESSION["avatar"] = $avat->getPath($avatarId);
+            $query .= "SET AVATAR_id_avatar='$avatarId'";
+            $count++;
+        }
 
-    public static function updateLastName($lastname, $userId, $pdo) {
-        $query = DatabaseQueries::updateLastName($lastname, $userId);
-        $pdo->query($query);
-        $_SESSION["lastname"] = $lastname;
-    }
-
-    public static function updateEmail($email, $userId, $pdo) {
-        $query = DatabaseQueries::updateEmail($email, $userId);
-        $pdo->query($query);
-        $_SESSION["email"] = $email;
-    }
-
-    public static function updatePassword($password, $userId, $pdo) {
-        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-        $query = DatabaseQueries::updatePassword($passwordHash, $userId);
-        $pdo->query($query);
-    }
-
-    public static function insertAvatar($path, $pdo) {
-        $query = DatabaseQueries::insertAvatar($path);
-        $pdo->query($query);
-    }
-
-    public static function selectAvatarByPath($path, $pdo) {
-        $query = DatabaseQueries::selectAvatarIdByPath($path);
-        $result = $pdo->query($query);
-        $result = $result->fetch();
-        return $result[0];
-
-    }
-
-    public static function updateAvatar($avatarId, $userId, $pdo) {
-        $query = DatabaseQueries::updateAvatar($avatarId, $userId);
-        $pdo->query($query);
-    }
-
-    public static function deleteAvatar($avatarId, $pdo) {
-        $query = DatabaseQueries::deleteAvatar($avatarId);
-        $pdo->query($query);
+        $query .= " WHERE id_user = '$userId'";
+        if($count > 0) {
+            $this->conn->query($query);
+            return true;
+        }
+        return false;
     }
 
 }

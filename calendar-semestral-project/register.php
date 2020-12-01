@@ -7,6 +7,8 @@ session_start();
 require_once "connection.php";
 require_once "User.php";
 
+$user = new User($pdo);
+
 if($_SERVER["REQUEST_METHOD"] == "POST") {
     $err = NULL;
     if(empty(trim($_POST["firstname"]))) {
@@ -45,7 +47,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
     if(empty($err)) {
         // roleId 1 - admin, 2 - user
         // avatarId 1 - default
-        if(!User::register($email, $password1, $firstname, $lastname, 2, 1, $pdo)) {
+        if(!$user->register($email, $password1, $firstname, $lastname, "user", 1)) {
             $err .= "This email address is already taken.<br>";
         }
     }

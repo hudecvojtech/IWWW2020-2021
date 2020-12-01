@@ -6,19 +6,22 @@
 session_start();
 require_once "connection.php";
 require_once "User.php";
+require_once "Avatar.php";
+
+$user = new User($pdo);
 
 if($_SERVER["REQUEST_METHOD"] == "POST") {
     $err = NULL;
     if(!empty(trim($_POST["firstname"]))) {
-        User::updateFirstName(trim($_POST["firstname"]), $_SESSION["id"], $pdo);
+        $firstname = $_POST["firstname"];
     }
 
     if(!empty(trim($_POST["lastname"]))) {
-        User::updateLastName(trim($_POST["lastname"]), $_SESSION["id"], $pdo);
+        $lastname = $_POST["lastname"];
     }
 
     if(!empty(trim($_POST["email"]))) {
-        User::updateEmail(trim($_POST["email"]), $_SESSION["id"], $pdo);
+        $email = $_POST["email"];
     }
 
     if(!empty(trim($_POST["password1"]))) {
@@ -26,22 +29,34 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
             if($_POST["password1"] != $_POST["password2"]) {
                 echo "nejsou stejný hesla";
             } else {
-                User::updatePassword(trim($_POST["password1"]), $_SESSION["id"], $pdo);
+                $password = $_POST["password1"];
             }
         } else {
             echo "chyba hesla vyplnit obě";
         }
     }
 
+    $avatarId = "";
+    $prevAvatarId = "";
     if(isset($_POST["avatarUpload"])) {
+        $avat = new Avatar($pdo);
         $target_file = basename($_FILES["fileToUpload"]["name"]);
         move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], "img/" . $target_file);
-        User::insertAvatar($target_file, $pdo);
-        $avatarId = User::selectAvatarByPath($target_file, $pdo);
-        User::updateAvatar(User::selectAvatarByPath($target_file, $pdo), $_SESSION["id"], $pdo);
-        User::deleteAvatar(User::selectAvatarByPath($_SESSION["avatar"], $pdo), $pdo);
-        $_SESSION["avatar"] = $target_file;
+        $avat->insert($target_file);
+        $avatarId = $avat->getId($target_file);
+        $prevAvatarId = $avat->getId($_SESSION["avatar"]);
     }
+
+    $role = ""; // dodělat
+    $user->update($_SESSION["id"],$firstname, $lastname, $email, $password, $role, $avatarId);
+
+    if(!empty($prevAvatarId)) {
+        if($prevAvatarId != 1) {
+            $avat = new Avatar($pdo);
+            $avat->delete($prevAvatarId);
+        }
+    }
+
 
 }
 
