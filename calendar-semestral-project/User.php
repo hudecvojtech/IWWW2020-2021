@@ -54,38 +54,41 @@ class User
     }
 
     public function update($userId, $firstname, $lastname, $email, $password, $role, $avatarId) {
+        $u = $this->getUser($userId);
         $count = 0;
-        $query = "UPDATE users ";
-        if($firstname != $_SESSION["firstname"] && !empty($firstname)) {
-            $_SESSION["firstname"] = $firstname;
-            $query .= "SET firstname='$firstname'";
+        $query = "UPDATE users SET";
+        $role = "";
+        if($firstname != $u["firstname"] && !empty($firstname)) {
+            $query .= " firstname='$firstname',";
             $count++;
         }
-        if($lastname != $_SESSION["lastname"] && !empty($lastname)) {
-            $_SESSION["lastname"] = $lastname;
-            $query .= "SET lastname='$lastname'";
+        if($lastname != $u["lastname"] && !empty($lastname)) {
+            $query .= " lastname='$lastname',";
             $count++;
         }
-        if($email != $_SESSION["email"] && !empty($email)) {
-            $_SESSION["email"] = $email;
-            $query .= "SET email='$email'";
+        if($email != $u["email"] && !empty($email)) {
+            $query .= " email='$email',";
             $count++;
         }
         if(!empty($password)) {
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-            $query .= "SET password='$passwordHash'";
+            $query .= " password='$passwordHash',";
             $count++;
         }
-        if($role != $_SESSION["role"] && !empty($role)) {
-            $_SESSION["role"] = $role;
-            $query .= "SET role='$role'";
+
+
+
+        if($role != $u["role"] && !empty($role) && $_SESSION["role"] == "admin") {
+            $query .= " role='$role',";
             $count++;
         }
-        if($avatarId != $_SESSION["avatar"] && !empty($avatarId)) {
+
+        if(!empty($avatarId)) {
             $avat = new Avatar($this->conn);
-            $_SESSION["avatar"] = $avat->getPath($avatarId);
-            $query .= "SET AVATAR_id_avatar='$avatarId'";
-            $count++;
+            if($avatarId != $u["AVATAR_id_avatar"]) {
+                $query .= " AVATAR_id_avatar='$avatarId'";
+                $count++;
+            }
         }
 
         $query .= " WHERE id_user = '$userId'";
@@ -94,6 +97,24 @@ class User
             return true;
         }
         return false;
+    }
+
+    public function getUsers() {
+        $query = "SELECT * FROM users";
+        $result = $this->conn->query($query);
+        return $result->fetchAll();
+    }
+
+    public function getUser($id) {
+        $query = "SELECT * FROM users WHERE id_user = '$id'";
+        $result = $this->conn->query($query);
+        return $result->fetch();
+    }
+
+    public function deleteUser($id)
+    {
+        $query = "DELETE FROM users WHERE id_user = '$id'";
+        $this->conn->query($query);
     }
 
 }

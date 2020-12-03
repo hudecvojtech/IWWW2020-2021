@@ -11,3 +11,7 @@ CREATE TABLE users_calendars(USER_id_user INTEGER NOT NULL, CALENDAR_id_calendar
  FOREIGN KEY(USER_id_user) REFERENCES users(id_user), FOREIGN KEY(CALENDAR_id_calendar) REFERENCES calendar(id_calendar));
 
 INSERT INTO avatar(id_avatar, path) VALUES(1, 'default-avatar.png');
+INSERT INTO category(name) VALUES('Meeting');
+INSERT INTO category(name) VALUES('Long term');
+INSERT INTO category(name) VALUES('Short term');
+INSERT INTO category(name) VALUES('Other');

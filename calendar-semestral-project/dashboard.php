@@ -7,8 +7,11 @@ session_start();
 require "connection.php";
 require "User.php";
 require "Calendar.php";
+require "Category.php";
+require "Event.php";
 
 $calendar = new Calendar($pdo);
+$event = new Event($pdo);
 
 if(isset($_GET["id"])) {
     $_SESSION["calendarId"] = $_GET["id"];
@@ -18,13 +21,15 @@ if(isset($_GET["id"])) {
 
 if(isset($_GET["deleteEvent"])) {
     $eventId = $_GET["deleteEvent"];
-    $calendar->deleteEvent($eventId);
+    $event->deleteEvent($eventId);
+    header("Location: dashboard.php?id=" . $_SESSION["calendarId"]);
 }
 
 if(isset($_GET["deleteCalendar"])) {
     if($_GET["deleteCalendar"] != 0) {
         $calendarId = $_GET["deleteCalendar"];
         $calendar->deleteCalendar($calendarId);
+        header("Location: dashboard.php");
     }
 }
 
@@ -32,7 +37,7 @@ if(isset($_POST["exportJson"])) {
     if($_GET["id"] != 0) {
         $path = "export-calendar-" . $_SESSION["calendarId"] . ".json";
         $fp = fopen($path, 'w');
-        $events = $calendar->selectEvents($_SESSION["calendarId"]);
+        $events = $event->selectEvents($_SESSION["calendarId"]);
         $json = json_encode($events);
         $json = preg_replace('/,\s*"[^"]+":null|"[^"]+":null,?/', '', $json);
         fwrite($fp, $json);
@@ -51,15 +56,16 @@ if(isset($_POST["exportJson"])) {
 }
 
 if(isset($_POST["importJson"])) {
-    if($_GET["id"] != 0) {
+    if($_GET["id"] != 0 && !empty($_FILES["fileToUpload"]["name"])) {
         $target_file = basename($_FILES["fileToUpload"]["name"]);
         move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file);
         $strJsonFileContents = file_get_contents($target_file);
         $array = json_decode($strJsonFileContents, true);
         foreach($array as $item) {
-            $calendar->eventInsert($item["name"], $item["start"], $item["end"], $_SESSION["calendarId"], 1);
+            $event->insertEvent($item["name"], $item["start"], $item["end"], $_SESSION["calendarId"], $item["CATEGORY_id_category"]);
         }
         unlink($target_file);
+        header("Location: dashboard.php?id=" . $_SESSION["calendarId"]);
     }
 }
 
@@ -83,7 +89,8 @@ if(isset($_POST["addCalendarButton"])) {
     }
 
     if(empty($err)) {
-        $calendar->calendarInsert($name, $validUntil);
+        $calendar->insertCalendar($name, $validUntil);
+        header("Location: dashboard.php");
     }
 }
 
@@ -111,8 +118,12 @@ if(isset($_POST["addEventButton"])) {
         $end = $_POST["end"];
     }
 
+    $cat = $_POST["category"];
+
     if(empty($err)) {
-        $calendar->eventInsert($name, $start, $end, $_SESSION["calendarId"], 1);
+        $category = new Category($pdo);
+        $event->insertEvent($name, $start, $end, $_SESSION["calendarId"], $category->getCategoryId($cat));
+        header("Location: dashboard.php?id=" . $_SESSION["calendarId"]);
     }
 
 }
@@ -140,6 +151,11 @@ if(isset($_POST["addEventButton"])) {
     </div>
     <nav>
         <ul>
+            <?php
+            if($_SESSION["role"] == "admin") {
+                echo '<li><a href="admin.php">Admin</a></li>';
+            }
+            ?>
             <li><a href="settings.php">Settings</a></li>
             <li><a href="logout.php">Log out</a></li>
         </ul>
@@ -155,7 +171,7 @@ if(isset($_POST["addEventButton"])) {
             <button type="button" onclick="addCalendar()">Add new calendar</button>
             <ul>
                 <?php
-                $arr = $calendar->getCalendars($_SESSION["id"]);
+                $arr = $calendar->getCalendarsByUserId($_SESSION["id"]);
                 if(!empty($arr[0]["id"])) {
                     foreach($arr as $item) {
                         echo '<li><a href="dashboard.php?id=' . $item["id"] . '">' . $item["name"] . '</a></li>';
@@ -184,21 +200,24 @@ if(isset($_POST["addEventButton"])) {
         <div class="events">
             <?php
             if($_SESSION["calendarId"] != 0) {
-                echo "<h2>" . $calendar->calendarNameById($_SESSION["calendarId"]) . "</h2>";
+                $category = new Category($pdo);
+                echo "<h2>" . $calendar->getCalendarName($_SESSION["calendarId"]) . "</h2>";
                 echo "<table>";
                 echo "<tr>";
                 echo "<th>Event</th>";
                 echo "<th>Start</th>";
                 echo "<th>End</th>";
+                echo "<th>Category</th>";
                 echo "<th>Action</th>";
                 echo "</tr>";
 
-                $arr = $calendar->selectEvents($_SESSION["calendarId"]);
+                $arr = $event->selectEvents($_SESSION["calendarId"]);
                 if(!empty($arr[0]["name"])) {
                     foreach($arr as $item) {
                         echo "<tr>";
                         echo "<td>" . $item["name"] . "</td><td>" . $item["start"] . "</td><td>" . $item["end"] .
-                            '</td><td><a href="dashboard.php?deleteEvent=' . $item["id"] . '&id=' .
+                            "</td><td>" . $category->getCategoryName($item["CATEGORY_id_category"]) . '</td><td><a href="dashboard.php?deleteEvent=' .
+                            $item["id"] . '&id=' .
                             $_SESSION["calendarId"] . '">delete</a></td>';
                         echo "</tr>";
                     }
@@ -233,6 +252,16 @@ if(isset($_POST["addEventButton"])) {
         <input type="date" name="start">
         <label for="end">End:</label>
         <input type="date" name="end">
+        <label for="category">Category:</label>
+        <select name="category" id="category">
+            <?php
+                $category = new Category($pdo);
+                $categories = $category->getCategories();
+                foreach ($categories as $item) {
+                    echo '<option value=' . $item["name"] . '>' . $item["name"] . '</option>';
+                }
+            ?>
+        </select>
         <input type="submit" value="Add event" name="addEventButton">
     </form>
 </div>
