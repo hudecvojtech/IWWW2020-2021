@@ -258,17 +258,22 @@ label {
     color: #000000;
 }
 
-.calendar-view .controls .left {
-    float: left;
-}
-
-.calendar-view .controls .right {
-    float: right;
-}
-
 .calendar-view .controls form {
-    float: left;
+    padding-top: 0px;
     padding-right: 5px;
+    width: auto;
+    float: left;
+    height: auto;
+    display: flex;
+}
+
+.calendar-view .controls form input[type=submit] {
+    margin-top: 0px;
+    width: auto;
+}
+
+.calendar-view .controls form input[type=file] {
+    padding-left: 5px;
 }
 
 .calendar-view table {
@@ -299,7 +304,7 @@ label {
     margin: 0 auto;
 }
 
-#addCalendar, #addEvent {
+#addCalendar, #addEvent, #shareCalendar, #invite {
     position: absolute;
     top: 25%;
     left: calc(50% - 25%/2);
@@ -310,7 +315,17 @@ label {
     display: none;
 }
 
-#addCalendar form, #addEvent form {
+#editEvent, #editCalendar {
+    position: absolute;
+    top: 25%;
+    left: calc(50% - 25%/2);
+    width: 25%;
+    background-color: #FFFFFF;
+    border-radius: 5px;
+    border: 3px #011936 solid;
+}
+
+#addCalendar form, #addEvent form, #shareCalendar form, #invite form, #editEvent form, #editCalendar form {
     padding: 50px;
 }
 

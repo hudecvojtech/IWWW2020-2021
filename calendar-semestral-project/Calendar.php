@@ -40,6 +40,11 @@ class Calendar
         return $arr;
     }
 
+    public function getCalendar($id) {
+        $query = "SELECT * FROM calendar WHERE id_calendar = '$id'";
+        return $this->conn->query($query)->fetch();
+    }
+
     public function getCalendarId($name)
     {
         $query = "SELECT id_calendar FROM calendar WHERE name = '$name'";
@@ -47,21 +52,19 @@ class Calendar
         $count = $stmt->rowCount();
         if ($count == 0) return 0;
 
-        $stmt = $stmt->fetch();
-        return $stmt[0];
+        return $stmt->fetch()[0];
     }
 
     public function getCalendarName($id)
     {
         $query = "SELECT name FROM calendar WHERE id_calendar = '$id'";
         $stmt = $this->conn->query($query);
-        $stmt = $stmt->fetch();
-        return $stmt[0];
+        return $stmt->fetch()[0];
     }
 
-    public function insertUserIdCalendarId($userId, $calendarId)
+    public function insertUserIdCalendarId($userId, $calendarId, $access)
     {
-        $query = "INSERT INTO users_calendars(USER_id_user, CALENDAR_id_calendar) VALUES($userId, $calendarId)";
+        $query = "INSERT INTO users_calendars(USER_id_user, CALENDAR_id_calendar, access) VALUES($userId, $calendarId, '$access')";
         $this->conn->query($query);
     }
 
@@ -72,8 +75,16 @@ class Calendar
         if (!$statement->execute()) {
             echo $statement->errorInfo();
         } else {
-            $this->insertUserIdCalendarId($_SESSION["id"], $this->getCalendarId($name));
+            $calId = "SELECT id_calendar FROM calendar ORDER BY id_calendar DESC LIMIT 1";
+            $stmt = $this->conn->query($calId);
+            $calId = $stmt->fetch()[0];
+            $this->insertUserIdCalendarId($_SESSION["id"], $calId, "owner");
         }
+    }
+
+    public function getAccess($userId, $calendarId) {
+        $query = "SELECT access FROM users_calendars WHERE USER_id_user = '$userId' AND CALENDAR_id_calendar = '$calendarId'";
+        return $this->conn->query($query)->fetch()[0];
     }
 
     public function deleteCalendar($calendarId)

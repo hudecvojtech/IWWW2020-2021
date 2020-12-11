@@ -57,7 +57,6 @@ class User
         $u = $this->getUser($userId);
         $count = 0;
         $query = "UPDATE users SET";
-        $role = "";
         if($firstname != $u["firstname"] && !empty($firstname)) {
             $query .= " firstname='$firstname',";
             $count++;
@@ -76,19 +75,17 @@ class User
             $count++;
         }
 
-
-
-        if($role != $u["role"] && !empty($role) && $_SESSION["role"] == "admin") {
-            $query .= " role='$role',";
-            $count++;
-        }
-
         if(!empty($avatarId)) {
             $avat = new Avatar($this->conn);
             if($avatarId != $u["AVATAR_id_avatar"]) {
-                $query .= " AVATAR_id_avatar='$avatarId'";
+                $query .= " AVATAR_id_avatar='$avatarId',";
                 $count++;
             }
+        }
+
+        if(!empty($role)) {
+            $query .= " role='$role'";
+            $count++;
         }
 
         $query .= " WHERE id_user = '$userId'";
@@ -109,6 +106,12 @@ class User
         $query = "SELECT * FROM users WHERE id_user = '$id'";
         $result = $this->conn->query($query);
         return $result->fetch();
+    }
+
+    public function getUserByEmail($email) {
+        $query = "SELECT * FROM users WHERE email = '$email'";
+        $result = $this->conn->query($query);
+        return $result->fetch()[0];
     }
 
     public function deleteUser($id)

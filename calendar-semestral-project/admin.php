@@ -10,6 +10,11 @@ require "User.php";
 require "Calendar.php";
 require "Avatar.php";
 
+$category = new Category($pdo);
+$calendar = new Calendar($pdo);
+$user = new User($pdo);
+$avatar = new Avatar($pdo);
+
 if ($_SESSION["role"] != "admin") {
     header("Location: dashboard.php");
 }
@@ -24,26 +29,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         if (empty($err)) {
-            $category = new Category($pdo);
             $category->insertCategory($categoryName);
         }
     }
 }
 
 if (isset($_GET["deleteCategory"])) {
-    $category = new Category($pdo);
     $category->deleteCategory($_GET["deleteCategory"]);
     header("Location: admin.php");
 }
 
 if(isset($_GET["deleteCalendar"])) {
-    $calendar = new Calendar($pdo);
     $calendar->deleteCalendar($_GET["deleteCalendar"]);
     header("Location: admin.php");
 }
 
 if(isset($_GET["deleteUser"])) {
-    $calendar = new Calendar($pdo);
     $calendarIds = $calendar->getCalendarsByUserId($_GET["deleteUser"]);
     if(!empty($calendarIds[0]["id"])) {
         foreach($calendarIds as $item) {
@@ -51,11 +52,9 @@ if(isset($_GET["deleteUser"])) {
         }
     }
 
-    $user = new User($pdo);
     $u = $user->getUser($_GET["deleteUser"]);
 
     if($u["AVATAR_id_avatar"] != 1) {
-        $avatar = new Avatar($pdo);
         $path = $avatar->getPath($u["AVATAR_id_avatar"]);
         $path = "img/" . $path;
         unlink($path);
@@ -102,7 +101,6 @@ if(isset($_GET["deleteUser"])) {
                 <th>Action</th>
             </tr>
             <?php
-            $category = new Category($pdo);
             $categories = $category->getCategories();
             foreach ($categories as $item) {
                 echo '<tr><td>' . $item["name"] . '</td><td>' . '<a href="admin.php?deleteCategory=' . $item["id_category"] . '">Delete</a>' . '</td></tr>';
@@ -126,7 +124,6 @@ if(isset($_GET["deleteUser"])) {
                 <th>Action</th>
             </tr>
             <?php
-            $user = new User($pdo);
             $users = $user->getUsers();
             foreach ($users as $item) {
                 echo '<tr><td>' . $item["email"] . '</td><td>' . $item["firstname"] . '</td><td>' . $item["lastname"] .
@@ -145,7 +142,6 @@ if(isset($_GET["deleteUser"])) {
                 <th>Action</th>
             </tr>
             <?php
-            $calendar = new Calendar($pdo);
             $calendars = $calendar->getCalendars();
             foreach ($calendars as $item) {
                 $expiration = ($item["valid_until"] == "0000-00-00") ? "never" : $item["valid_until"];

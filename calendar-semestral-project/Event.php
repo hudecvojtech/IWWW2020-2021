@@ -15,6 +15,12 @@ VALUES('$name', '$start', '$end', '$calendarId', '$categoryId')";
         $this->conn->query($query);
     }
 
+    public function updateEvent($eventId, $name, $start, $end, $categoryId) {
+        $query = "UPDATE event_calendar SET name = '$name', start = '$start', end = '$end', CATEGORY_id_category = '$categoryId' WHERE id_event_calendar = '$eventId'";
+        echo $query;
+        $this->conn->query($query);
+    }
+
     public function selectEvents($calendarId) {
         $arr[][] = NULL;
         $i = 0;
@@ -37,5 +43,10 @@ VALUES('$name', '$start', '$end', '$calendarId', '$categoryId')";
     {
         $query = "DELETE FROM event_calendar WHERE id_event_calendar = '$eventId'";
         $this->conn->query($query);
+    }
+
+    public function getEvent($eventId) {
+        $query = "SELECT * FROM event_calendar WHERE id_event_calendar = '$eventId'";
+        return $this->conn->query($query)->fetch();
     }
 }

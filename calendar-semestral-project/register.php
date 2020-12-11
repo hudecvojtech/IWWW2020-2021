@@ -45,7 +45,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     if(empty($err)) {
-        // roleId 1 - admin, 2 - user
         // avatarId 1 - default
         if(!$user->register($email, $password1, $firstname, $lastname, "user", 1)) {
             $err .= "This email address is already taken.<br>";

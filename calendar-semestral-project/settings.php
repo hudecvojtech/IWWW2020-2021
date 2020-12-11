@@ -61,6 +61,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
         $avatarId = $avat->getId($basename);
     }
 
+    $role = "user";
     if(isset($_POST["role"])) {
         $role = $_POST["role"];
     }

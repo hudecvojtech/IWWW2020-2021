@@ -17,15 +17,13 @@ class Avatar
     public function getId($path) {
         $query = "SELECT id_avatar FROM avatar WHERE path = '$path'";
         $result = $this->conn->query($query);
-        $result = $result->fetch();
-        return $result["id_avatar"];
+        return $result->fetch()["id_avatar"];
     }
 
     public function getPath($id) {
         $query = "SELECT path FROM avatar WHERE id_avatar = '$id'";
         $result = $this->conn->query($query);
-        $result = $result->fetch();
-        return $result["path"];
+        return $result->fetch()["path"];
     }
 
     public function delete($avatarId) {
