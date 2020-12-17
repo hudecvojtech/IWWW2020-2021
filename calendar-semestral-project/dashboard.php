@@ -72,7 +72,7 @@ if (isset($_POST["importJson"])) {
     }
 }
 
-if (isset($_POST["addCalendarButton"])) {
+if (isset($_POST["addCalendarButton"]) || isset($_POST["editCalendarButton"])) {
     $err = NULL;
 
     if (empty($_POST["calendarname"])) {
@@ -92,7 +92,11 @@ if (isset($_POST["addCalendarButton"])) {
     }
 
     if (empty($err)) {
-        $calendar->insertCalendar($name, $validUntil);
+        if (isset($_POST["editCalendarButton"])) {
+            $calendar->updateCalendar($_POST["calendarId"], $name, $validUntil);
+        } else {
+            $calendar->insertCalendar($name, $validUntil);
+        }
         header("Location: dashboard.php");
     }
 }
@@ -112,20 +116,24 @@ if (isset($_POST["shareCalendarButton"])) {
 
 }
 
-if(isset($_POST["inviteEventButton"])) {
+if (isset($_POST["inviteEventButton"])) {
     $err = NULL;
-    if(!isset($_POST["email"])) {
+    if (!isset($_POST["email"])) {
         $err .= "You have to fill email<br>";
     } else {
         $email = $_POST["email"];
     }
 
-    if(empty($err)) {
-
+    if (empty($err)) {
+        $userId = $user->getUserByEmail($email);
+        $invitedUserCalendars = $calendar->getCalendarsByUserId($userId);
+        foreach($invitedUserCalendars as $calendars) {
+            $event->insertCalendarsEvents($calendars["id"], $_COOKIE["inviteEventId"], "read");
+        }
     }
 }
 
-if(isset($_GET["editCalendar"])) {
+if (isset($_GET["editCalendar"])) {
     $selectedCalendarId = $_GET["editCalendar"];
     $selectedCalendar = $calendar->getCalendar($selectedCalendarId);
     $selectedCalendarName = $selectedCalendar["name"];
@@ -133,16 +141,18 @@ if(isset($_GET["editCalendar"])) {
     echo '<div id="editEvent">
 <form action="dashboard.php?id=' . $_SESSION["calendarId"] . '" method="post">
     <input type="hidden" name="calendarId" value="' . $selectedCalendarId . '">
-    <label for="name">Name:</label>
-    <input type="text" name="name" value="' . $selectedCalendarName . '">
-    <label for="end">Expiration:</label>
-    <input type="date" name="end" value="' . $selectedCalendarExpiration . '">
-    <input type="submit" value="Edit calendar" name="editCalendarButton">
+    <label for="calendarname">Name:</label>
+        <input type="text" name="calendarname" value="' . $selectedCalendarName . '">
+        <label for="expiration">Expiration:</label>
+        <input type="checkbox" name="expiration">
+        <label for="validUntil">Valid until:</label>
+        <input type="date" name="validUntil" value="' . $selectedCalendarExpiration . '">
+        <input type="submit" value="Add calendar" name="editCalendarButton">
     </form>
 </div>';
 }
 
-if(isset($_GET["editEvent"])) {
+if (isset($_GET["editEvent"])) {
     $editEventId = $_GET["editEvent"];
     $selectedEvent = $event->getEvent($editEventId);
     $eventName = $selectedEvent["name"];
@@ -160,14 +170,14 @@ if(isset($_GET["editEvent"])) {
     <input type="date" name="end" value="' . $eventEnd . '">
     <label for="category">Category:</label>
     <select name="category" id="category">';
-        $categories = $category->getCategories();
-        foreach ($categories as $item) {
-            echo '<option value="' . $item["name"] . '" ';
-            if($item["id_category"] == $eventCategoryId) {
-                echo 'selected';
-            }
-            echo '>' . $item["name"] . '</option>';
+    $categories = $category->getCategories();
+    foreach ($categories as $item) {
+        echo '<option value="' . $item["name"] . '" ';
+        if ($item["id_category"] == $eventCategoryId) {
+            echo 'selected';
         }
+        echo '>' . $item["name"] . '</option>';
+    }
     echo '</select>
     <input type="submit" value="Edit event" name="editEventButton">
     </form>
@@ -201,7 +211,7 @@ if (isset($_POST["addEventButton"]) || isset($_POST["editEventButton"])) {
     $cat = $_POST["category"];
 
     if (empty($err)) {
-        if(isset($_POST["addEventButton"])) {
+        if (isset($_POST["addEventButton"])) {
             $event->insertEvent($name, $start, $end, $_SESSION["calendarId"], $category->getCategoryId($cat));
         } else {
             $eventId = $_POST["eventId"];
@@ -267,12 +277,12 @@ if (isset($_POST["addEventButton"]) || isset($_POST["editEventButton"])) {
         </div>
     </div>
     <div class="calendar-view">
-        <div class="controls" <?php if($_SESSION["calendarId"] == 0) echo 'style="display: none;"'?>>
+        <div class="controls" <?php if ($_SESSION["calendarId"] == 0) echo 'style="display: none;"' ?>>
             <form action="dashboard.php?id=<?php echo $_SESSION["calendarId"]; ?>" method="post">
                 <input type="submit" value="Export" name="exportJson">
             </form>
             <?php
-            if($access == "readwrite" || $access == "owner") {
+            if ($access == "readwrite" || $access == "owner") {
                 echo '<form action="dashboard.php?id=' . $_SESSION["calendarId"] . '" method="post"
                   enctype="multipart/form-data">
                 <input type="submit" value="Import" name="importJson">
@@ -281,7 +291,7 @@ if (isset($_POST["addEventButton"]) || isset($_POST["editEventButton"])) {
             <button type="button" onclick="share()">Share calendar</button>
             <button type="button" onclick="addEvent()">Add event</button>';
             }
-            if($access == "owner") {
+            if ($access == "owner") {
                 echo ' <button type="button"><a href="dashboard.php?editCalendar=' . $_SESSION["calendarId"] . '&id=' . $_SESSION["calendarId"] . '">Edit calendar</a></button>';
                 echo ' <button type="button"><a href="dashboard.php?deleteCalendar=' . $_SESSION["calendarId"] . '">Delete calendar</a></button>';
             }
@@ -303,13 +313,14 @@ if (isset($_POST["addEventButton"]) || isset($_POST["editEventButton"])) {
                 $arr = $event->selectEvents($_SESSION["calendarId"]);
                 if (!empty($arr[0]["name"])) {
                     foreach ($arr as $item) {
-                        if($access == "read") {
+                        $itemAccess = $event->getAccess($_SESSION["calendarId"], $item["id"]);
+                        if ($access == "read" || $itemAccess == "read") {
                             $delete = "";
                             $invite = "";
                             $edit = "";
                         } else {
                             $delete = '<a href="dashboard.php?deleteEvent=' . $item["id"] . '&id=' . $_SESSION["calendarId"] . '">delete</a>';
-                            $invite = '<a href="#" onclick="invite()">invite</a>';
+                            $invite = '<a href="#" onclick="invite(' . $item["id"] . ')">invite</a>';
                             $edit = '<a href="dashboard.php?editEvent=' . $item["id"] . '&id=' . $_SESSION["calendarId"] . '">edit</a>';
                         }
                         echo "<tr>";
@@ -441,7 +452,8 @@ if (!empty($err)) {
         document.getElementById("shareCalendar").style.display = 'block';
     }
 
-    function invite() {
+    function invite(id) {
+        document.cookie = "inviteEventId=" + id + ";";
         document.getElementById("invite").style.display = 'block';
     }
 </script>

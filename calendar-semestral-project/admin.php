@@ -29,7 +29,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         if (empty($err)) {
-            $category->insertCategory($categoryName);
+            if(isset($_GET["editCategory"])) {
+                $category->updateCategory($_GET["editCategory"], $categoryName);
+            } else {
+                $category->insertCategory($categoryName);
+                echo "OK";
+            }
+            header("Location: admin.php");
         }
     }
 }
@@ -37,6 +43,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 if (isset($_GET["deleteCategory"])) {
     $category->deleteCategory($_GET["deleteCategory"]);
     header("Location: admin.php");
+}
+
+if(isset($_GET["editCategory"])) {
+    $categoryName = $category->getCategoryName($_GET["editCategory"]);
 }
 
 if(isset($_GET["deleteCalendar"])) {
@@ -103,13 +113,13 @@ if(isset($_GET["deleteUser"])) {
             <?php
             $categories = $category->getCategories();
             foreach ($categories as $item) {
-                echo '<tr><td>' . $item["name"] . '</td><td>' . '<a href="admin.php?deleteCategory=' . $item["id_category"] . '">Delete</a>' . '</td></tr>';
+                echo '<tr><td>' . $item["name"] . '</td><td><a href="admin.php?editCategory=' . $item["id_category"] . '">Edit</a> <a href="admin.php?deleteCategory=' . $item["id_category"] . '">Delete</a> ' . '</td></tr>';
             }
             ?>
         </table>
-        <form action="admin.php" method="POST" name="addCategory">
+        <form action="admin.php<?php if(isset($_GET["editCategory"])) echo '?editCategory=' . $_GET["editCategory"]; ?>" method="POST" name="addCategory">
             <label for="categoryName">Category name:</label>
-            <input type="text" name="categoryName">
+            <input type="text" name="categoryName" value="<?php if(!empty($categoryName)) echo $categoryName; ?>">
             <input type="submit" value="Add category" name="buttonAddCategory">
         </form>
     </div>

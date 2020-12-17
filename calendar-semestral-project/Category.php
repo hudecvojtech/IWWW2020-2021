@@ -29,6 +29,11 @@ class Category
         $this->conn->query($query);
     }
 
+    public function updateCategory($id, $name) {
+        $query = "UPDATE category SET name = '$name' WHERE id_category = '$id'";
+        $this->conn->query($query);
+    }
+
     public function deleteCategory($id) {
         $query = "DELETE FROM category WHERE id_category = '$id'";
         $this->conn->query($query);

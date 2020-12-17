@@ -82,6 +82,11 @@ class Calendar
         }
     }
 
+    public function updateCalendar($id, $name, $validUntil) {
+        $query = "UPDATE calendar SET name = '$name', valid_until = '$validUntil' WHERE id_calendar = '$id'";
+        $this->conn->query($query);
+    }
+
     public function getAccess($userId, $calendarId) {
         $query = "SELECT access FROM users_calendars WHERE USER_id_user = '$userId' AND CALENDAR_id_calendar = '$calendarId'";
         return $this->conn->query($query)->fetch()[0];
@@ -89,9 +94,15 @@ class Calendar
 
     public function deleteCalendar($calendarId)
     {
+        $queryEventsInCalendar = "SELECT EVENT_CALENDAR_id_event_calendar FROM calendars_events WHERE CALENDAR_id_calendar = '$calendarId'";
+        $result = $this->conn->query($queryEventsInCalendar);
+        while($row = $result->fetch()) {
+            $queryDeleteRecord = "DELETE FROM calendars_events WHERE EVENT_CALENDAR_id_event_calendar = '$row[0]';
+DELETE FROM event_calendar WHERE id_event_calendar = '$row[0]'";
+            $this->conn->query($queryDeleteRecord);
+        }
         $query = "DELETE FROM users_calendars WHERE CALENDAR_id_calendar = '$calendarId'; 
-DELETE FROM event_calendar WHERE CALENDAR_id_calendar = '$calendarId';
- DELETE FROM calendar WHERE id_calendar = '$calendarId'";
+DELETE FROM calendar WHERE id_calendar = '$calendarId'";
         $this->conn->query($query);
     }
 }
