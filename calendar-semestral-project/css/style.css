@@ -276,22 +276,22 @@ label {
     padding-left: 5px;
 }
 
-.calendar-view table {
+table {
     margin: 20px auto 40px;
     width: 95%;
     white-space:nowrap;
     border-collapse: collapse;
 }
 
-.calendar-view tr:nth-child(even) {
+tr:nth-child(even) {
     background-color: #dddddd;
 }
 
-.calendar-view th {
+th {
     border-bottom: 1px #000000 solid;
 }
 
-.calendar-view td {
+td {
     text-align: center;
 }
 
@@ -349,4 +349,129 @@ label {
 
 .settingsform {
     padding-bottom: 50px;
+}
+
+/* admin.php */
+.categories {
+    width: 70%;
+    margin: 0 auto;
+}
+
+.users {
+    width: 70%;
+    margin: 0 auto;
+}
+
+.calendars {
+    width: 70%;
+    margin: 0 auto;
+}
+
+@media only screen and (max-width: 768px) {
+    header .logo {
+        padding: 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    header nav {
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    header ul li {
+        display: block;
+        width: 80%;
+        margin: 5px auto;
+        text-align: center;
+    }
+
+    .container form {
+        width: 80%;
+    }
+
+    .side {
+        width: 100%;
+        clear: both;
+    }
+
+    .calendar-view {
+        width: 100%;
+    }
+
+    .calendar-view button {
+        margin: 5px auto;
+        width: 80%;
+        display: block;
+    }
+
+    .controls {
+        min-height: 350px;
+    }
+
+    table {
+        margin: 20px auto 40px;
+        width: 95%;
+        white-space:nowrap;
+        border-collapse: collapse;
+        clear: both;
+    }
+
+    .events h2 {
+        width: 95%;
+        margin: 0 auto;
+    }
+
+    #addCalendar, #addEvent, #shareCalendar, #invite {
+        position: absolute;
+        top: 20%;
+        left: 5%;
+        width: 90%;
+    }
+
+    #editEvent, #editCalendar {
+        position: absolute;
+        top: 20%;
+        left: 5%;
+        width: 90%;
+    }
+
+
+    #errorAbsolute {
+        position: absolute;
+        top: 20%;
+        left: 5%;
+        width: 90%;
+        height: 50%;
+    }
+
+    .categories {
+        width: 100%;
+    }
+
+    .users {
+        width: 100%;
+    }
+
+    .calendars {
+        width: 100%;
+    }
+}
+
+@media print {
+    header {
+        display: none !important;
+    }
+
+    .side {
+        display: none !important;
+    }
+
+    .controls {
+        display: none !important;
+    }
+
+    footer {
+        display: none !important;
+    }
 }

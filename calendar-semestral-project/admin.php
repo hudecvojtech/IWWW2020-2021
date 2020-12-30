@@ -86,6 +86,7 @@ if(isset($_GET["deleteUser"])) {
     <title>Admin</title>
     <meta name="description" content="Free calendar app">
     <meta name="author" content="Vojtěch Hudec">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
@@ -156,7 +157,7 @@ if(isset($_GET["deleteUser"])) {
             foreach ($calendars as $item) {
                 $expiration = ($item["valid_until"] == "0000-00-00") ? "never" : $item["valid_until"];
                 echo '<tr><td>' . $item["name"] . '</td><td>' . $expiration . '</td><td>' .
-                    '</td><td><a href="admin.php?deleteCalendar=' . $item["id_calendar"] . '">Delete</a></td></tr>';
+                    '<a href="admin.php?deleteCalendar=' . $item["id_calendar"] . '">Delete</a></td></tr>';
             }
             ?>
         </table>

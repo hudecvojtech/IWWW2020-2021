@@ -92,6 +92,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Settings</title>
     <meta name="description" content="Free calendar app">
     <meta name="author" content="Vojtěch Hudec">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
